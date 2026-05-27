@@ -89,10 +89,39 @@
             color: #2c3e50;
         }
 
-        /* --- A TELA VIRTUAL (MAGIA DO AUTO-FIT AQUI) --- */
+        /* --- BARRA DE FORMATAÇÃO --- */
+        .format-toolbar {
+            display: flex;
+            gap: 5px;
+            background: #ecf0f1;
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        .btn-format {
+            background: white;
+            border: 1px solid #bdc3c7;
+            border-radius: 3px;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            transition: all 0.2s;
+        }
+
+        .btn-format:hover {
+            background: #e0e0e0;
+            border-color: #95a5a6;
+        }
+
+        /* --- A TELA VIRTUAL --- */
         .preview-wrapper {
             width: 100%;
-            aspect-ratio: 32 / 9; /* Proporção Ultra-wide da sua igreja */
+            aspect-ratio: 32 / 9;
             background-color: #000;
             border-radius: 4px;
             overflow: hidden;
@@ -102,7 +131,7 @@
         }
 
         .virtual-screen {
-            width: 1280px; /* Resolução virtual base 32:9 */
+            width: 1280px; 
             height: 360px; 
             transform-origin: top left;
             background-size: cover;
@@ -116,7 +145,7 @@
             width: 100%;
             height: 100%;
             box-sizing: border-box;
-            padding: 5% 10%; /* Valores iniciais */
+            padding: 5% 10%;
         }
 
         .text-wrapper {
@@ -125,13 +154,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden; /* Importante para a medição do auto-fit */
+            overflow: hidden;
         }
 
         .preview-text {
             width: 100%;
             text-align: center;
-            white-space: pre-wrap;
+            /* Permite ler as tags HTML renderizadas */
+            white-space: normal; 
             word-wrap: break-word;
             text-shadow: 2px 2px 5px rgba(0,0,0,0.9), -1px -1px 3px rgba(0,0,0,0.8); 
             line-height: 1.2;
@@ -223,7 +253,7 @@
 
     <div class="header">
         <h1>Gerador de Slides Holyrics (32:9)</h1>
-        <p>A fonte ajustará automaticamente. Se houver muito texto, o sistema alertará.</p>
+        <p>A fonte ajustará automaticamente. Selecione um texto para usar as opções de formatação.</p>
     </div>
 
     <div class="painel-config">
@@ -262,6 +292,14 @@
         <div class="slide-container">
             <div class="slide-header">
                 <span class="slide-numero">Slide 1</span>
+                
+                <div class="format-toolbar">
+                    <button type="button" class="btn-format" onclick="aplicarFormatacao(this, 'b')" title="Negrito"><b>B</b></button>
+                    <button type="button" class="btn-format" onclick="aplicarFormatacao(this, 'i')" title="Itálico"><i>I</i></button>
+                    <button type="button" class="btn-format" onclick="aplicarFormatacao(this, 'u')" title="Sublinhado"><u>U</u></button>
+                </div>
+
+                <button class="btn btn-remove" onclick="removerSlide(this)">Remover</button>
             </div>
             
             <div class="preview-wrapper">
@@ -287,7 +325,6 @@
     <script>
         let backgroundUrlGlobal = '';
 
-        // Executa assim que a página carrega e sempre que a janela for redimensionada
         window.onload = function() {
             aplicarConfiguracoesGlobais();
             window.addEventListener('resize', ajustarEscalaDeTodasAsTelas);
@@ -298,7 +335,6 @@
             document.querySelectorAll('.slide-container').forEach(slide => {
                 const wrapper = slide.querySelector('.preview-wrapper');
                 const virtual = slide.querySelector('.virtual-screen');
-                // A tela virtual tem 1280px. Descobrimos qual a largura do espaço atual e criamos o fator de escala.
                 const scale = wrapper.clientWidth / 1280;
                 virtual.style.transform = `scale(${scale})`;
             });
@@ -308,13 +344,21 @@
         function adicionarSlide() {
             const grid = document.getElementById('lista-slides');
             const botaoAdd = document.getElementById('btn-add');
+            const slideCount = document.querySelectorAll('.slide-container').length + 1;
             
             const novoSlide = document.createElement('div');
             novoSlide.className = 'slide-container';
             
             novoSlide.innerHTML = `
                 <div class="slide-header">
-                    <span class="slide-numero">Slide X</span>
+                    <span class="slide-numero">Slide ${slideCount}</span>
+                    
+                    <div class="format-toolbar">
+                        <button type="button" class="btn-format" onclick="aplicarFormatacao(this, 'b')" title="Negrito"><b>B</b></button>
+                        <button type="button" class="btn-format" onclick="aplicarFormatacao(this, 'i')" title="Itálico"><i>I</i></button>
+                        <button type="button" class="btn-format" onclick="aplicarFormatacao(this, 'u')" title="Sublinhado"><u>U</u></button>
+                    </div>
+
                     <button class="btn btn-remove" onclick="removerSlide(this)">Remover</button>
                 </div>
                 
@@ -333,12 +377,10 @@
                 <textarea placeholder="Digite o texto deste slide aqui..." oninput="atualizarTextoEAutoFit(this.closest('.slide-container'))"></textarea>
             `;
             
-            // Insere o novo slide ANTES do botão de adicionar
             grid.insertBefore(novoSlide, botaoAdd);
-            
             atualizarNumeracao();
-            aplicarConfiguracoesEmSlide(novoSlide); // Aplica as cores e margens atuais
-            ajustarEscalaDeTodasAsTelas(); // Ajusta o zoom do novo card
+            aplicarConfiguracoesEmSlide(novoSlide); 
+            ajustarEscalaDeTodasAsTelas(); 
             
             novoSlide.querySelector('textarea').focus();
         }
@@ -355,7 +397,42 @@
             });
         }
 
-        // --- CONFIGURAÇÕES GLOBAIS (FUNDO, CORES, MARGENS) ---
+        // --- FORMATAÇÃO DE TEXTO (NEGRITO, ITÁLICO, SUBLINHADO) ---
+        function aplicarFormatacao(botao, tagHTML) {
+            const slide = botao.closest('.slide-container');
+            const textarea = slide.querySelector('textarea');
+            
+            const inicio = textarea.selectionStart;
+            const fim = textarea.selectionEnd;
+            const textoCompleto = textarea.value;
+            
+            const textoAntes = textoCompleto.substring(0, inicio);
+            const textoSelecionado = textoCompleto.substring(inicio, fim);
+            const textoDepois = textoCompleto.substring(fim, textoCompleto.length);
+            
+            // Insere as tags ao redor do texto (ou onde o cursor está)
+            const textoFormatado = `<${tagHTML}>${textoSelecionado}</${tagHTML}>`;
+            
+            textarea.value = textoAntes + textoFormatado + textoDepois;
+            
+            // Foca de volta no campo de texto
+            textarea.focus();
+            
+            // Reposiciona o cursor adequadamente
+            if (textoSelecionado.length === 0) {
+                // Se não tinha texto selecionado, coloca o cursor no meio das tags
+                textarea.selectionStart = textarea.selectionEnd = inicio + tagHTML.length + 2;
+            } else {
+                // Se tinha texto, deixa o bloco todo selecionado junto com as tags
+                textarea.selectionStart = inicio;
+                textarea.selectionEnd = inicio + textoFormatado.length;
+            }
+            
+            // Atualiza a tela de preview
+            atualizarTextoEAutoFit(slide);
+        }
+
+        // --- CONFIGURAÇÕES GLOBAIS ---
         function mudarFundoGlobal(event) {
             const file = event.target.files[0];
             if (file) {
@@ -369,7 +446,7 @@
         function aplicarConfiguracoesGlobais() {
             document.querySelectorAll('.slide-container').forEach(slide => {
                 aplicarConfiguracoesEmSlide(slide);
-                atualizarTextoEAutoFit(slide); // Re-calcula o auto-fit pois a margem pode ter mudado
+                atualizarTextoEAutoFit(slide); 
             });
         }
 
@@ -389,44 +466,41 @@
             ajustarEscalaDeTodasAsTelas();
         }
 
-        // --- O CORAÇÃO DO SISTEMA: AUTO-FIT ---
+        // --- AUTO-FIT E RENDERIZAÇÃO DO PREVIEW ---
         function atualizarTextoEAutoFit(slide) {
             const textarea = slide.querySelector('textarea');
             const previewText = slide.querySelector('.preview-text');
             const textWrapper = slide.querySelector('.text-wrapper');
             const warning = slide.querySelector('.warning-msg');
             
-            // 1. Atualiza o texto na tela
-            previewText.innerText = textarea.value;
+            // Renderiza o texto permitindo as tags HTML, e converte quebras de linha normais em <br> para o HTML entender
+            let conteudoParaPreview = textarea.value;
+            conteudoParaPreview = conteudoParaPreview.replace(/\n/g, '<br>');
+            previewText.innerHTML = conteudoParaPreview;
 
-            // Se estiver vazio, esconde o aviso e para por aqui
             if(textarea.value.trim() === '') {
                 warning.style.display = 'none';
                 textarea.style.borderColor = '#bdc3c7';
                 return;
             }
 
-            // 2. Pega os limites de fonte
             const maxFont = parseInt(document.getElementById('input-max').value) || 70;
             const minFont = parseInt(document.getElementById('input-min').value) || 35;
             
-            // 3. Começa tentando o tamanho máximo
             let currentFont = maxFont;
             previewText.style.fontSize = currentFont + 'px';
             
-            // 4. O LOOP: Enquanto a altura do texto for MAIOR que a caixa que o segura, diminui a fonte
             while (currentFont > minFont && previewText.scrollHeight > textWrapper.clientHeight) {
                 currentFont--;
                 previewText.style.fontSize = currentFont + 'px';
             }
             
-            // 5. Verifica se bateu no mínimo e AINDA está vazando texto
             if (currentFont === minFont && previewText.scrollHeight > textWrapper.clientHeight) {
                 warning.style.display = 'block';
-                textarea.style.borderColor = '#e74c3c'; // Borda vermelha pra chamar atenção
+                textarea.style.borderColor = '#e74c3c'; 
             } else {
                 warning.style.display = 'none';
-                textarea.style.borderColor = '#bdc3c7'; // Borda normal
+                textarea.style.borderColor = '#bdc3c7'; 
             }
         }
 
@@ -447,6 +521,7 @@
                 return;
             }
 
+            // O Holyrics entende as quebras duplas como divisores de slide e preservará as tags HTML escritas
             const textoFinal = textos.join('\n\n');
             const blob = new Blob([textoFinal], { type: 'text/plain;charset=utf-8' });
             const url = URL.createObjectURL(blob);
