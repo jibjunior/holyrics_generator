@@ -48,7 +48,7 @@
         }
 
         .slide-container.ativo {
-            border-left: 4px solid #3498db; /* Destaque para o slide sendo editado */
+            border-left: 4px solid #3498db;
         }
 
         .slide-header {
@@ -111,10 +111,10 @@
             gap: 5px;
         }
 
-        /* A Tela Virtual (Proporção 16:9) */
+        /* A Tela Virtual (Proporção 32:9 ajustada) */
         .tela-virtual-container {
             width: 100%;
-            aspect-ratio: 16 / 9;
+            aspect-ratio: 32 / 9; /* Aqui ocorreu a mudança */
             background-color: #000;
             background-size: cover;
             background-position: center;
@@ -135,7 +135,6 @@
             text-align: center;
             white-space: pre-wrap;
             word-wrap: break-word;
-            /* Sombra padrão para leitura sobre imagens (Padrão Holyrics) */
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8), -1px -1px 2px rgba(0,0,0,0.8); 
             transition: all 0.2s;
             box-sizing: border-box;
@@ -212,7 +211,7 @@
                     
                     <div class="config-item">
                         <label>Tamanho da Fonte (px)</label>
-                        <input type="number" id="input-tamanho" value="36" oninput="aplicarEstilosPreview()">
+                        <input type="number" id="input-tamanho" value="28" oninput="aplicarEstilosPreview()">
                     </div>
 
                     <div class="config-item">
@@ -245,7 +244,6 @@
         let contadorSlides = 1;
         let slideAtual = null;
 
-        // Inicializa o preview com o estilo padrão ao carregar a página
         window.onload = function() {
             aplicarEstilosPreview();
             const primeiroTextarea = document.querySelector('textarea');
@@ -271,18 +269,16 @@
             lista.appendChild(novoSlide);
             atualizarNumeracao();
             
-            // Foca automaticamente no novo slide
             const novoTextarea = novoSlide.querySelector('textarea');
             novoTextarea.focus();
         }
 
         function removerSlide(botao, event) {
-            event.stopPropagation(); // Evita que o clique acione o focarSlide()
+            event.stopPropagation();
             const slide = botao.closest('.slide-container');
             slide.remove();
             atualizarNumeracao();
             
-            // Limpa o preview se excluir o slide atual
             document.getElementById('texto-preview').innerText = "";
         }
 
@@ -295,12 +291,8 @@
             contadorSlides = slides.length;
         }
 
-        // --- LÓGICA DO PREVIEW ---
-
         function focarSlide(elementoSlide) {
-            // Remove destaque dos outros
             document.querySelectorAll('.slide-container').forEach(el => el.classList.remove('ativo'));
-            // Adiciona destaque no atual
             elementoSlide.classList.add('ativo');
             slideAtual = elementoSlide.querySelector('textarea');
             atualizarPreview(slideAtual);
@@ -322,21 +314,17 @@
         function aplicarEstilosPreview() {
             const textoPreview = document.getElementById('texto-preview');
             
-            // Pega os valores dos inputs
             const tamanho = document.getElementById('input-tamanho').value;
             const cor = document.getElementById('input-cor').value;
-            const mt = document.getElementById('input-mt').value; // Margem Topo
-            const mb = document.getElementById('input-mb').value; // Margem Baixo
-            const me = document.getElementById('input-me').value; // Margem Esquerda
-            const md = document.getElementById('input-md').value; // Margem Direita
+            const mt = document.getElementById('input-mt').value;
+            const mb = document.getElementById('input-mb').value;
+            const me = document.getElementById('input-me').value;
+            const md = document.getElementById('input-md').value;
 
-            // Aplica no CSS do texto (usando padding para simular as margens da tela)
             textoPreview.style.fontSize = `${tamanho}px`;
             textoPreview.style.color = cor;
             textoPreview.style.padding = `${mt}% ${md}% ${mb}% ${me}%`;
         }
-
-        // --- EXPORTAÇÃO ---
 
         function exportarParaHolyrics() {
             const caixasTexto = document.querySelectorAll('textarea');
